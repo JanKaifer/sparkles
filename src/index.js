@@ -1,10 +1,10 @@
-import "./styles.css";
-
 const G = 100;
 const maxThrowSpeed = 150;
 const minLifeLen = 500;
 const maxLifeLen = 1000;
-const n = 200;
+const n = 100;
+
+const speedCoef = 1;
 
 const c = document.createElement("canvas");
 c.id = "sparkly-canvas";
@@ -63,7 +63,7 @@ class Sparkle {
   }
 
   get timeLeft() {
-    return this.birthTime + this.life - now();
+    return this.birthTime + this.life / speedCoef - now();
   }
 }
 
@@ -109,7 +109,7 @@ function tick() {
   tick.lastT = curr;
   const tobeDeleted = [];
 
-  const vecSpeed = diff / 1000;
+  const vecSpeed = (diff * speedCoef) / 1000;
 
   sparkles.forEach(s => {
     s.x += s.dx * vecSpeed;
