@@ -1,12 +1,19 @@
 import "./styles.css";
 
+const G = 100;
+const maxThrowSpeed = 150;
+const minLifeLen = 500;
+const maxLifeLen = 1000;
+const n = 200;
+
 const c = document.createElement("canvas");
 c.id = "sparkly-canvas";
-c.style.position = "absolute";
+c.style.position = "fixed";
 c.style.top = "0";
 c.style.left = "0";
 c.width = window.innerWidth;
 c.height = window.innerHeight;
+
 c.style.pointerEvents = "none";
 document.body.appendChild(c);
 
@@ -14,6 +21,17 @@ const ctx = c.getContext("2d");
 
 function now() {
   return new Date().getTime();
+}
+
+function randomDouble() {
+  return Math.random();
+}
+
+function randomDoubleCentered() {
+  const count = 5;
+  const arr = [...Array(count)].map(() => randomDouble());
+
+  return arr.reduce((acc, curr) => acc + curr, 0) / count;
 }
 
 function convertHex(hex, opacity) {
@@ -31,8 +49,8 @@ class Sparkle {
     this.x = x;
     this.y = y;
 
-    const dir = Math.random() * 2 * Math.PI;
-    const dist = Math.random() * 6;
+    const dir = randomDouble() * 2 * Math.PI;
+    const dist = randomDoubleCentered() * maxThrowSpeed;
 
     this.dx = Math.cos(dir) * dist;
     this.dy = Math.sin(dir) * dist;
@@ -41,7 +59,7 @@ class Sparkle {
 
     this.color = getRandomColor();
     this.birthTime = now();
-    this.life = Math.random() * 1000 + 1500;
+    this.life = Math.random() * (maxLifeLen - minLifeLen) + minLifeLen;
   }
 
   get timeLeft() {
@@ -64,11 +82,15 @@ function createSparkles({ x, y, n = 1 }) {
   }
 }
 
-document.body.addEventListener("click", e => {
+document.addEventListener("click", e => {
+  const viewportOffset = c.getBoundingClientRect();
+  const top = viewportOffset.top;
+  const left = viewportOffset.left;
+
   createSparkles({
-    x: e.clientX,
-    y: e.clientY,
-    n: 100
+    x: e.clientX - left,
+    y: e.clientY - top,
+    n: n
   });
 });
 
@@ -81,16 +103,19 @@ function getRandomColor() {
   return color;
 }
 
-let lastT = now();
-
 function tick() {
+  const curr = now();
+  const diff = curr - tick.lastT;
+  tick.lastT = curr;
   const tobeDeleted = [];
 
-  sparkles.forEach(s => {
-    s.x += s.dx;
-    s.y += s.dy;
+  const vecSpeed = diff / 1000;
 
-    s.dy += 0.2;
+  sparkles.forEach(s => {
+    s.x += s.dx * vecSpeed;
+    s.y += s.dy * vecSpeed;
+
+    s.dy += G * vecSpeed;
 
     if (s.timeLeft <= 0) {
       tobeDeleted.push(s);
@@ -99,6 +124,8 @@ function tick() {
 
   tobeDeleted.map(s => sparkles.delete(s));
 }
+
+tick.lastT = now();
 
 function render() {
   // clear the canvas
