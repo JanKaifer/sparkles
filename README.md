@@ -1,2 +1,0 @@
-# sparkles
-Created with CodeSandbox
